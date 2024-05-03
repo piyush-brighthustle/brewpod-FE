@@ -1,6 +1,6 @@
 /* eslint-disable quotes */
 import { Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import AppLogo from '../../components/AppLogo/AppLogo';
@@ -67,7 +67,7 @@ const FermentationStatusScreen = () => {
     );
 
   const { brewParams, beakerParams } = route.params;
-  const { motorStartAction, motorStopAction } = useRNSerialPortContext();
+  const { motorStartAction, motorStopAction, cleanup, brewActionCycleCompleted } = useRNSerialPortContext();
   const { carouselData, pillButton, screenSubtitle, screenTitle, carouselStartIndex } = brewParams;
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -76,6 +76,7 @@ const FermentationStatusScreen = () => {
   const isFocused = useIsFocused();
   const [showStatusColoured, setShowStatusColoured] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [maltScreenCount, setMaltScreenCount] = useState(0);
 
   const [hidePillButton, setHidePillButton] = useState(false);
   const { width: screenWidth } = Dimensions.get('window');
@@ -87,9 +88,8 @@ const FermentationStatusScreen = () => {
 
   const callProcesses = async () => {
     if (pillButton.title[0] === "I've Added the Malt") {
-      setButtonDisabled(true);
+      setMaltScreenCount((prev) => prev + 1);
       await motorStartAction();
-      setButtonDisabled(false);
     }
   };
 
@@ -98,6 +98,29 @@ const FermentationStatusScreen = () => {
       callProcesses();
     }
   }, [isFocused]);
+
+  const handleExecutionAfterBrewCycleCompleted = useCallback(async () => {
+    if (pillButton.title[0] === "I've Added the Malt") {
+      setButtonDisabled(!brewActionCycleCompleted);
+    }
+    if (brewActionCycleCompleted) {
+      console.log('------ CAROUSEL CYCLE COMPLETED ------');
+      if (pillButton.title[0] === "I've Added the Malt") {
+        if (maltScreenCount === 1) cleanup(true);
+      }
+    }
+  }, [pillButton.title[0], brewActionCycleCompleted, maltScreenCount]);
+
+  console.log('BUTTON DISABLED', buttonDisabled);
+
+  useEffect(() => {
+    if (maltScreenCount === 2) cleanup();
+  }, [maltScreenCount]);
+
+  useEffect(() => {
+    // When motor start completed brewActionCycleCompleted will be true and button disabled should be false that's why !brewActionCycleCompleted
+    handleExecutionAfterBrewCycleCompleted();
+  }, [brewActionCycleCompleted]);
 
   const handleClick = async () => {
     if (pillButton.to && pillButton.to === 'Measure Brix') {
@@ -111,7 +134,7 @@ const FermentationStatusScreen = () => {
     } else if (pillButton.title[0] === "I've Added the Malt") {
       setButtonDisabled(true);
       await motorStopAction();
-      setButtonDisabled(false);
+      setMaltScreenCount((prev) => prev + 1);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       navigation.navigate('Beaker', {

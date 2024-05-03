@@ -40,8 +40,8 @@ const useAction = () => {
   const coolerTemp = 4;
   const [temperatureText, setTemperatureText] = useState('');
 
-  const cleanup = () => {
-    setBrewActionCycleCompleted(false);
+  const cleanup = (excludeCycleState?: boolean) => {
+    if (!excludeCycleState) setBrewActionCycleCompleted(false);
     setPercentageCompleted(0);
     setResponseFromDeviceHandleSend('');
     setCurrentActionIndex(0);
@@ -115,27 +115,81 @@ const useAction = () => {
   };
 
   const motorStartAction = async () => {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        const res = await handleSend('mash');
-        console.log('MOTOR START HANDLESEND RESPONSE------ ', res);
-        setResponseFromDeviceHandleSend(res);
-        // await sleep(2000);
-        setActionStatus('motor started');
-        await startCountdown(10);
-        const checkTimer = setInterval(() => {
-          if (timeLeft === 0) {
-            clearInterval(checkTimer);
-            setActionStatus('idle');
-            resolve();
-          }
-        }, 11000);
-      } catch (error) {
-        console.error('Error sending "mash" action:', error);
-        reject(error);
+    try {
+      if (usbSerialState.connected && usbSerialState.deviceName) {
+        setActions([
+          {
+            action: 'motorStart',
+          },
+        ]);
+      } else {
+        console.error('motorStart function did not work');
       }
-    });
+    } catch (error) {
+      console.error('Error during motorStartAction: ', error);
+      throw error;
+    }
   };
+
+  // const motorStopAction = async () => {
+  //   try {
+  //     if (usbSerialState.connected && usbSerialState.deviceName) {
+  //       setActions([
+  //         {
+  //           action: 'motorStop',
+  //         },
+  //       ]);
+  //     } else {
+  //       console.error('motorStop function did not work');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error during motorStopAction: ', error);
+  //     throw error;
+  //   }
+  // };
+
+  const motorStart = useCallback(async () => {
+    console.log('------- MOTOR START STARTED -------');
+
+    setActionStatus('motor started');
+    const params = { motor: 1 };
+    const res = await handleSend('mash', params);
+    console.log('FILL HANDLESEND RESPONSE------ ', res);
+    setResponseFromDeviceHandleSend(res);
+  }, [handleSend]);
+
+  // const motorStop = useCallback(async () => {
+  //   console.log('------- MOTOR STOP STARTED -------');
+  //   setActionStatus('motor stopping');
+  //   const params = { motor: 0 };
+  //   const res = await handleSend('mash', params);
+  //   console.log('FILL HANDLESEND RESPONSE------ ', res);
+  //   setResponseFromDeviceHandleSend(res);
+  // }, [handleSend]);
+
+  // const motorStartAction = async () => {
+  //   return new Promise<void>(async (resolve, reject) => {
+  //     try {
+  //       const res = await handleSend('mash');
+  //       console.log('MOTOR START HANDLESEND RESPONSE------ ', res);
+  //       setResponseFromDeviceHandleSend(res);
+  //       // await sleep(2000);
+  //       setActionStatus('motor started');
+  //       await startCountdown(10);
+  //       const checkTimer = setInterval(() => {
+  //         if (timeLeft === 0) {
+  //           clearInterval(checkTimer);
+  //           setActionStatus('idle');
+  //           resolve();
+  //         }
+  //       }, 11000);
+  //     } catch (error) {
+  //       console.error('Error sending "mash" action:', error);
+  //       reject(error);
+  //     }
+  //   });
+  // };
+
   const motorStopAction = async () => {
     return new Promise<void>(async (resolve, reject) => {
       try {
@@ -257,6 +311,7 @@ const useAction = () => {
 
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const temperatureInput = getValueByName(brewInputs, 'temperature', 'mash');
+      setBrewActionCycleCompleted(false);
       setActions([
         {
           action: 'temp',
@@ -377,6 +432,8 @@ const useAction = () => {
     } else {
       if (name === 'fill') await startFillAction();
       if (name === 'temp') await startTempAction();
+      if (name === 'motorStart') await motorStart();
+      // if (name === 'motorStop') await motorStop();
     }
     return;
   };
@@ -394,7 +451,7 @@ const useAction = () => {
     else setPercentageCompleted(percentage);
 
     if (percentage < 100) {
-      await sleep(30000);
+      await sleep(4000);
       await runBrewAction(action, params);
     } else {
       if (action === 'temp') {
@@ -434,7 +491,28 @@ const useAction = () => {
           const { drum } = params;
           executeActionCallAndPercentage(drum, pv, action);
         }
+      } else if (action === 'motorStart') {
+        const {
+          msg: { st },
+        } = parsedOutput;
+        console.log('HERE IN MOTOR START');
+
+        if (st !== 1) {
+          await sleep(4000);
+          await runBrewAction(action);
+        } else {
+          await sleep(10000);
+          setActionStatus('idle');
+          setResponseFromDeviceHandleSend('');
+          setCurrentActionIndex((prev) => prev + 1);
+        }
       }
+      // else if (action === 'motorStop') {
+      //   const {
+      //     msg: { st },
+      //   } = parsedOutput;
+      //   console.log('HERE IN MOTOR STOP');
+      // }
     }
   }, [output, actions, currentActionIndex, sleep, runBrewAction]);
 

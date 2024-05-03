@@ -18,7 +18,7 @@ export type SerialPortContext = {
   responseFromDeviceHandleSend: string;
   output: string;
   brewActionCycleCompleted: boolean;
-  cleanup: () => void;
+  cleanup: (excludeCycleState?: boolean) => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
