@@ -107,6 +107,15 @@ const FermentationStatusScreen = () => {
       console.log('------ CAROUSEL CYCLE COMPLETED ------');
       if (pillButton.title[0] === "I've Added the Malt") {
         if (maltScreenCount === 1) cleanup(true);
+        if (maltScreenCount === 2) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          navigation.navigate('Beaker', {
+            beakerParams,
+            brewParams,
+          });
+          cleanup();
+        }
       }
     }
   }, [pillButton.title[0], brewActionCycleCompleted, maltScreenCount]);
@@ -137,10 +146,10 @@ const FermentationStatusScreen = () => {
       setMaltScreenCount((prev) => prev + 1);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      navigation.navigate('Beaker', {
-        beakerParams,
-        brewParams,
-      });
+      // navigation.navigate('Beaker', {
+      //   beakerParams,
+      //   brewParams,
+      // });
     } else {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

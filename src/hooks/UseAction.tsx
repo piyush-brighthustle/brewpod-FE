@@ -131,22 +131,22 @@ const useAction = () => {
     }
   };
 
-  // const motorStopAction = async () => {
-  //   try {
-  //     if (usbSerialState.connected && usbSerialState.deviceName) {
-  //       setActions([
-  //         {
-  //           action: 'motorStop',
-  //         },
-  //       ]);
-  //     } else {
-  //       console.error('motorStop function did not work');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error during motorStopAction: ', error);
-  //     throw error;
-  //   }
-  // };
+  const motorStopAction = async () => {
+    try {
+      if (usbSerialState.connected && usbSerialState.deviceName) {
+        setActions([
+          {
+            action: 'motorStop',
+          },
+        ]);
+      } else {
+        console.error('motorStop function did not work');
+      }
+    } catch (error) {
+      console.error('Error during motorStopAction: ', error);
+      throw error;
+    }
+  };
 
   const motorStart = useCallback(async () => {
     console.log('------- MOTOR START STARTED -------');
@@ -158,14 +158,14 @@ const useAction = () => {
     setResponseFromDeviceHandleSend(res);
   }, [handleSend]);
 
-  // const motorStop = useCallback(async () => {
-  //   console.log('------- MOTOR STOP STARTED -------');
-  //   setActionStatus('motor stopping');
-  //   const params = { motor: 0 };
-  //   const res = await handleSend('mash', params);
-  //   console.log('FILL HANDLESEND RESPONSE------ ', res);
-  //   setResponseFromDeviceHandleSend(res);
-  // }, [handleSend]);
+  const motorStop = useCallback(async () => {
+    console.log('------- MOTOR STOP STARTED -------');
+    setActionStatus('motor stopping');
+    const params = { motor: 0 };
+    const res = await handleSend('mash', params);
+    console.log('FILL HANDLESEND RESPONSE------ ', res);
+    setResponseFromDeviceHandleSend(res);
+  }, [handleSend]);
 
   // const motorStartAction = async () => {
   //   return new Promise<void>(async (resolve, reject) => {
@@ -190,29 +190,29 @@ const useAction = () => {
   //   });
   // };
 
-  const motorStopAction = async () => {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        const res = await handleSend('mash');
-        console.log('MOTOR STOP HANDLESEND RESPONSE------ ', res);
-        setResponseFromDeviceHandleSend(res);
-        // await sleep(2000);
-        setActionStatus('motor stopped');
-        await startCountdown(10);
+  // const motorStopAction = async () => {
+  //   return new Promise<void>(async (resolve, reject) => {
+  //     try {
+  //       const res = await handleSend('mash');
+  //       console.log('MOTOR STOP HANDLESEND RESPONSE------ ', res);
+  //       setResponseFromDeviceHandleSend(res);
+  //       // await sleep(2000);
+  //       setActionStatus('motor stopped');
+  //       await startCountdown(10);
 
-        const checkTimer = setInterval(() => {
-          if (timeLeft === 0) {
-            clearInterval(checkTimer);
-            setActionStatus('idle');
-            resolve();
-          }
-        }, 2000);
-      } catch (error) {
-        console.error('Error sending "mash" action:', error);
-        reject(error);
-      }
-    });
-  };
+  //       const checkTimer = setInterval(() => {
+  //         if (timeLeft === 0) {
+  //           clearInterval(checkTimer);
+  //           setActionStatus('idle');
+  //           resolve();
+  //         }
+  //       }, 2000);
+  //     } catch (error) {
+  //       console.error('Error sending "mash" action:', error);
+  //       reject(error);
+  //     }
+  //   });
+  // };
 
   const liftUpAction = async () => {
     return new Promise<void>(async (resolve, reject) => {
@@ -433,7 +433,7 @@ const useAction = () => {
       if (name === 'fill') await startFillAction();
       if (name === 'temp') await startTempAction();
       if (name === 'motorStart') await motorStart();
-      // if (name === 'motorStop') await motorStop();
+      if (name === 'motorStop') await motorStop();
     }
     return;
   };
@@ -451,7 +451,7 @@ const useAction = () => {
     else setPercentageCompleted(percentage);
 
     if (percentage < 100) {
-      await sleep(4000);
+      await sleep(30000);
       await runBrewAction(action, params);
     } else {
       if (action === 'temp') {
