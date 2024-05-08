@@ -451,7 +451,7 @@ const useAction = () => {
     else setPercentageCompleted(percentage);
 
     if (percentage < 100) {
-      await sleep(4000);
+      await sleep(30000);
       await runBrewAction(action, params);
     } else {
       if (action === 'temp') {

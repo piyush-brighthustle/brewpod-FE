@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, DeviceEventEmitter } from 'react-native';
-import { RNSerialport, actions, definitions } from 'brewpod-react-native-usb-serialport';
+import { RNSerialport, actions, definitions } from 'react-native-usb-serialport';
 import { AIR, Fill, HOPS, LIFT_Down, LIFT_UP, MASH, System_Check, TEMP } from '../utils/serialActions';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUsbSerialState, setUsbSerialState } from '../slices/usbSerialStateSlice';

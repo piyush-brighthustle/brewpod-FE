@@ -34,7 +34,7 @@
     "react-native-size-matters": "^0.4.0",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-svg": "^13.10.0",
-    "brewpod-react-native-usb-serialport": "git+https://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:x-oauth-basic@github.com/YMaurya1234/brewpod-react-native-usb-serialport.git",
+    "react-native-usb-serialport": "^2.3.5",
     "react-native-vector-icons": "^10.0.3",
     "react-native-video": "^5.2.1",
     "react-redux": "^8.1.1"
