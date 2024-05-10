@@ -41,6 +41,7 @@ const useAction = () => {
   const [temperatureText, setTemperatureText] = useState('');
 
   const cleanup = (excludeCycleState?: boolean) => {
+    console.log('------$$$$ CLEANUP CALLED $$$$------');
     if (!excludeCycleState) setBrewActionCycleCompleted(false);
     setPercentageCompleted(0);
     setResponseFromDeviceHandleSend('');
@@ -77,7 +78,6 @@ const useAction = () => {
       setActionStatus('heating');
 
       if (params && Object.keys(params).length > 0) {
-        console.log('object');
         updateActions('temp', params);
         const res = await handleSend('temp', { action: 'temp', params: params });
         console.log('TEMP PARAMS HANDLESEND RESPONSE------ ', res);
@@ -132,6 +132,7 @@ const useAction = () => {
   };
 
   const motorStopAction = async () => {
+    cleanup();
     try {
       if (usbSerialState.connected && usbSerialState.deviceName) {
         setActions([
@@ -149,21 +150,18 @@ const useAction = () => {
   };
 
   const motorStart = useCallback(async () => {
-    console.log('------- MOTOR START STARTED -------');
-
-    setActionStatus('motor started');
+    setActionStatus('motorStart');
     const params = { motor: 1 };
-    const res = await handleSend('mash', params);
-    console.log('FILL HANDLESEND RESPONSE------ ', res);
+    const res = await handleSend('mash', { action: 'mash', params });
+    console.log('MOTOR START HANDLESEND RESPONSE------ ', res);
     setResponseFromDeviceHandleSend(res);
   }, [handleSend]);
 
   const motorStop = useCallback(async () => {
-    console.log('------- MOTOR STOP STARTED -------');
-    setActionStatus('motor stopping');
+    setActionStatus('motorStop');
     const params = { motor: 0 };
-    const res = await handleSend('mash', params);
-    console.log('FILL HANDLESEND RESPONSE------ ', res);
+    const res = await handleSend('mash', { action: 'mash', params });
+    console.log('MOTOR STOP HANDLESEND RESPONSE------ ', res);
     setResponseFromDeviceHandleSend(res);
   }, [handleSend]);
 
@@ -446,7 +444,6 @@ const useAction = () => {
     } else {
       percentage = calculatePercentage(params, pv);
     }
-    console.log('PERCENTAGE ------ ', percentage);
     if (percentage > 100) setPercentageCompleted(100);
     else setPercentageCompleted(percentage);
 
@@ -495,7 +492,6 @@ const useAction = () => {
         const {
           msg: { st },
         } = parsedOutput;
-        console.log('HERE IN MOTOR START');
 
         if (st !== 1) {
           await sleep(4000);
@@ -506,13 +502,21 @@ const useAction = () => {
           setResponseFromDeviceHandleSend('');
           setCurrentActionIndex((prev) => prev + 1);
         }
+      } else if (action === 'motorStop') {
+        const {
+          msg: { st },
+        } = parsedOutput;
+
+        if (st !== 0) {
+          await sleep(4000);
+          await runBrewAction(action);
+        } else {
+          await sleep(10000);
+          setActionStatus('idle');
+          setResponseFromDeviceHandleSend('');
+          setCurrentActionIndex((prev) => prev + 1);
+        }
       }
-      // else if (action === 'motorStop') {
-      //   const {
-      //     msg: { st },
-      //   } = parsedOutput;
-      //   console.log('HERE IN MOTOR STOP');
-      // }
     }
   }, [output, actions, currentActionIndex, sleep, runBrewAction]);
 

@@ -76,7 +76,7 @@ const FermentationStatusScreen = () => {
   const isFocused = useIsFocused();
   const [showStatusColoured, setShowStatusColoured] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
-  const [maltScreenCount, setMaltScreenCount] = useState(0);
+  const [currentAction, setCurrentAction] = useState('');
 
   const [hidePillButton, setHidePillButton] = useState(false);
   const { width: screenWidth } = Dimensions.get('window');
@@ -88,7 +88,7 @@ const FermentationStatusScreen = () => {
 
   const callProcesses = async () => {
     if (pillButton.title[0] === "I've Added the Malt") {
-      setMaltScreenCount((prev) => prev + 1);
+      setCurrentAction('motorStart');
       await motorStartAction();
     }
   };
@@ -106,8 +106,8 @@ const FermentationStatusScreen = () => {
     if (brewActionCycleCompleted) {
       console.log('------ CAROUSEL CYCLE COMPLETED ------');
       if (pillButton.title[0] === "I've Added the Malt") {
-        if (maltScreenCount === 1) cleanup(true);
-        if (maltScreenCount === 2) {
+        if (currentAction === 'motorStart') cleanup(true);
+        if (currentAction === 'motorStop') {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           navigation.navigate('Beaker', {
@@ -118,13 +118,9 @@ const FermentationStatusScreen = () => {
         }
       }
     }
-  }, [pillButton.title[0], brewActionCycleCompleted, maltScreenCount]);
+  }, [pillButton.title[0], brewActionCycleCompleted, currentAction]);
 
   console.log('BUTTON DISABLED', buttonDisabled);
-
-  useEffect(() => {
-    if (maltScreenCount === 2) cleanup();
-  }, [maltScreenCount]);
 
   useEffect(() => {
     // When motor start completed brewActionCycleCompleted will be true and button disabled should be false that's why !brewActionCycleCompleted
@@ -141,9 +137,9 @@ const FermentationStatusScreen = () => {
         beakerParams: measureBrixBeakerParams,
       });
     } else if (pillButton.title[0] === "I've Added the Malt") {
-      setButtonDisabled(true);
+      setCurrentAction('motorStop');
       await motorStopAction();
-      setMaltScreenCount((prev) => prev + 1);
+      // setMaltScreenCount((prev) => prev + 1);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // navigation.navigate('Beaker', {

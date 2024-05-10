@@ -147,7 +147,7 @@ function useUSBSerial() {
             str = JSON?.stringify(AIR);
             break;
           case ActionTypes.MASH:
-            str = JSON?.stringify(MASH);
+            str = JSON?.stringify(params);
             break;
           case ActionTypes.HOPS:
             str = JSON?.stringify(HOPS);
