@@ -296,7 +296,7 @@ const BeakerScreen = () => {
           strokeWidth={18}
           circularProgressStyle={{
             position: 'absolute',
-            top: '30%',
+            top: '33%',
             left: 0,
             right: 0,
             zIndex: 200,

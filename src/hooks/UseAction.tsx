@@ -75,16 +75,17 @@ const useAction = () => {
   );
 
   const startTempAction = useCallback(
-    async (temp = 92, params?: any) => {
+    async (temp = 80, params?: any) => {
       setActionStatus('heating');
 
       if (params && Object.keys(params).length > 0) {
         updateActions('temp', params);
-        const res = await handleSend('temp', { action: 'temp', params: params });
+        const res = await handleSend('temp', { action: 'temp', params });
         console.log('TEMP PARAMS HANDLESEND RESPONSE------ ', res);
         setResponseFromDeviceHandleSend(res);
       } else {
-        const defaultParams = { drum: temp, cooler: 4 };
+        // const defaultParams = { drum: temp, cooler: 4 };
+        const defaultParams = { drum: temp, cooler: 10 };
         updateActions('temp', defaultParams);
         const res = await handleSend('temp', { action: 'temp', params: defaultParams });
         console.log('TEMP SIMPLE HANDLESEND RESPONSE------ ', res);
@@ -290,13 +291,27 @@ const useAction = () => {
 
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const temperatureInput = getValueByName(brewInputs, 'temperature', 'mash');
+      // setActions([
+      //   {
+      //     action: 'fill',
+      //   },
+      //   {
+      //     action: 'temp',
+      //     params: temperatureInput[0],
+      //   },
+      // ]);
+      const params = {
+        drum: 63,
+        cooler: 4,
+      };
       setActions([
         {
           action: 'fill',
+          params: 23,
         },
         {
           action: 'temp',
-          params: temperatureInput[0],
+          params,
         },
       ]);
     } else {
@@ -311,10 +326,20 @@ const useAction = () => {
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const temperatureInput = getValueByName(brewInputs, 'temperature', 'mash');
       setBrewActionCycleCompleted(false);
+      // setActions([
+      //   {
+      //     action: 'temp',
+      //     params: temperatureInput[1],
+      //   },
+      // ]);
+      const params = {
+        drum: 63,
+        cooler: 4,
+      };
       setActions([
         {
           action: 'temp',
-          params: temperatureInput[1],
+          params,
         },
       ]);
     } else {
@@ -333,10 +358,14 @@ const useAction = () => {
 
       const boilTemperature = getValueByName(brewInputs, 'temperature', 'boil');
       const pwm = pwmGenerator(currentBrix, volumetricbrixratio, targetBrix, boilDuration);
+      // const params = {
+      //   drum: boilTemperature[0],
+      //   pwm: pwm,
+      //   cooler: coolerTemp,
+      // };
       const params = {
-        drum: boilTemperature[0],
-        pwm: pwm,
-        cooler: coolerTemp,
+        drum: 94,
+        cooler: 4,
       };
       setActions([
         {
@@ -362,10 +391,14 @@ const useAction = () => {
       const pitching = getValueByName(brewInputs, 'temperature', 'fermentation');
 
       const pwm = pwmGenerator(currentBrix, volumetricbrixratio, targetBrix, boilDuration);
+      // const params = {
+      //   drum: pitching[0],
+      //   pwm: pwm,
+      //   cooler: coolerTemp,
+      // };
       const params = {
-        drum: pitching[0],
-        pwm: pwm,
-        cooler: coolerTemp,
+        drum: 27,
+        cooler: 4,
       };
       setActions([
         {
@@ -432,7 +465,7 @@ const useAction = () => {
     if (params) {
       if (name === 'fill') await startFillAction(params);
       if (name === 'temp') {
-        if (params.pwm) await startTempAction(0, params);
+        if (params && Object.keys(params).length > 0) await startTempAction(0, params);
         else await startTempAction(params);
       }
     } else {
@@ -456,7 +489,7 @@ const useAction = () => {
     else setPercentageCompleted(percentage);
 
     if (percentage < 100) {
-      await sleep(30000);
+      await sleep(1000);
       await runBrewAction(action, params);
     } else {
       if (action === 'temp') {
@@ -470,6 +503,9 @@ const useAction = () => {
       // await sleep(6000);
       // setPercentageCompleted(0);
       setCurrentActionIndex((prev) => prev + 1);
+
+      // IF ONLY TEMP IS THERE IN ACTION AND IT HAS ALREADY COMPLETED THEN DO A CLEANUP
+      if (action === 'temp' && actions.length === 1) cleanup();
     }
   };
 
@@ -490,7 +526,7 @@ const useAction = () => {
           },
         } = parsedOutput;
 
-        if (params.pwm) {
+        if (params && Object.keys(params).length > 0) {
           executeActionCallAndPercentage(params, pv, action);
         } else {
           const { drum } = params;
@@ -502,7 +538,7 @@ const useAction = () => {
         } = parsedOutput;
 
         if (st !== 1) {
-          await sleep(4000);
+          await sleep(1000);
           await runBrewAction(action);
         } else {
           await sleep(10000);
@@ -516,7 +552,7 @@ const useAction = () => {
         } = parsedOutput;
 
         if (st !== 0) {
-          await sleep(4000);
+          await sleep(1000);
           await runBrewAction(action);
         } else {
           await sleep(10000);
