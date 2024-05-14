@@ -151,6 +151,7 @@ const BeakerScreen = () => {
     output,
     brewActionCycleCompleted,
     cleanup,
+    startCooling,
   } = useRNSerialPortContext();
   const [showButton, setShowButton] = useState(false);
   const [textIndex, setTextIndex] = useState(0);
@@ -221,12 +222,13 @@ const BeakerScreen = () => {
         cleanup();
       } else if (processName === 'Boiling') {
         await sleep(BOILING_TIMER);
-        await showAlertForHop('Add Hops 1');
-        await showAlertForHop('Add Hops 2');
-        await showAlertForHop('Add Hops 3');
-        await showAlertForHop('Add Hops 4');
+        await startCooling();
+        // await showAlertForHop('Add Hops 1');
+        // await showAlertForHop('Add Hops 2');
+        // await showAlertForHop('Add Hops 3');
+        // await showAlertForHop('Add Hops 4');
 
-        cleanup();
+        // cleanup();
       }
     }
   }, [processName, brewActionCycleCompleted]);

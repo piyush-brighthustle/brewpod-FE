@@ -19,6 +19,7 @@ export type SerialPortContext = {
   output: string;
   brewActionCycleCompleted: boolean;
   cleanup: (excludeCycleState?: boolean) => void;
+  startCooling: (currentBrix?: number) => Promise<void>;
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -52,6 +53,7 @@ export function RNSerialPortContextProvider({ children }: Props) {
     output,
     brewActionCycleCompleted,
     cleanup,
+    startCooling,
   } = useAction();
 
   return (
@@ -74,6 +76,7 @@ export function RNSerialPortContextProvider({ children }: Props) {
         output,
         brewActionCycleCompleted,
         cleanup,
+        startCooling,
       }}>
       {children}
     </RNSerialPortContext.Provider>

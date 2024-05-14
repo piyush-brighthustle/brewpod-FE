@@ -351,6 +351,7 @@ const useAction = () => {
   };
 
   const startCooling = async (currentBrix = 12) => {
+    cleanup();
     const resRecipes = await apiClient.get('recipe');
     const brewInputs = resRecipes?.data?.recipe[0]?.brew_inputs;
 
@@ -366,7 +367,13 @@ const useAction = () => {
         pwm: pwm,
         cooler: coolerTemp,
       };
-      await startTempAction(pitching[0], params);
+      setActions([
+        {
+          action: 'temp',
+          params,
+        },
+      ]);
+      // await startTempAction(pitching[0], params);
     }
   };
 
