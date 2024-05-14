@@ -18,6 +18,7 @@ import { TEXT_COLOR } from '../../types/enums';
 import { selectBrixValue } from '../../slices/brixSlice';
 import { selectUsbSerialState } from '../../slices/usbSerialStateSlice';
 import { useRNSerialPortContext } from '../../components/RNSerialPortWrapper/RNSerialPortWrapper';
+import { BOILING_TIMER, MASHMOTOR_LIFTUP_TIMER } from '../../hooks/UseAction';
 
 export type BeakerScreenScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Beaker'>;
 type BeakerScreenScreenRouteProp = RouteProp<RootStackParamList, 'Beaker'>;
@@ -212,12 +213,14 @@ const BeakerScreen = () => {
 
         cleanup();
       } else if (processName === 'Malt') {
+        await sleep(MASHMOTOR_LIFTUP_TIMER);
         navigation.navigate('LiveTracker', {
           brewParams: afterMaltBrewParams,
         });
 
         cleanup();
       } else if (processName === 'Boiling') {
+        await sleep(BOILING_TIMER);
         await showAlertForHop('Add Hops 1');
         await showAlertForHop('Add Hops 2');
         await showAlertForHop('Add Hops 3');

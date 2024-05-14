@@ -14,8 +14,9 @@ const MASH_FILL_TIMER = 10000;
 const MASH_TEMP_TIMER = 60000;
 const MASHMOTOR_START_TIMER = 150000;
 const MASHMOTOR_STOP_TIMER = 60000;
-const MASHMOTOR_LIFTUP_TIMER = 60000;
+export const MASHMOTOR_LIFTUP_TIMER = 3600000;
 const MASHMOTOR_LIFTDOWN_TIMER = 60000;
+export const BOILING_TIMER = 3600000;
 
 const ye = { code: 200, msg: { cool: { md: 0, pv: 48, sv: 4 }, drum: { md: 0, pv: 21, sv: 92 } } };
 
