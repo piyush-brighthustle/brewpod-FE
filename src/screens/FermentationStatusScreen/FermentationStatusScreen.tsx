@@ -95,6 +95,7 @@ const FermentationStatusScreen = () => {
 
   useEffect(() => {
     if (isFocused) {
+      setButtonDisabled(false);
       callProcesses();
     }
   }, [isFocused]);
