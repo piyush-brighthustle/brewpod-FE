@@ -365,7 +365,7 @@ const useAction = () => {
       // };
       const params = {
         drum: 94,
-        pwm: 92,
+        pwm: pwm,
         cooler: 4,
       };
       setActions([
