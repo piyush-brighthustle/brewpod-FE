@@ -245,30 +245,34 @@ const BeakerScreen = () => {
       cleanup();
       return;
     }
-    if (brewCounter < 1) {
-      dispatch(incrementBrewCounter());
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      navigation.navigate('LiveTracker', {
-        brewParams,
-        beakerParams: {
-          ...beakerParams,
-          pillButton: {
-            title: ['Close the valve', 'Proceed with Mashing'],
-          },
-        },
-      });
-    }
-    // else if (processName === 'Malt') {
+    // if (brewCounter < 1) {
+    //   dispatch(incrementBrewCounter());
+    //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //   // @ts-ignore
+    //   navigation.navigate('LiveTracker', {
+    //     brewParams,
+    //     beakerParams: {
+    //       ...beakerParams,
+    //       pillButton: {
+    //         title: ['Close the valve', 'Proceed with Mashing'],
+    //       },
+    //     },
+    //   });
     // }
-    else {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      navigation.navigate('LiveTracker', {
-        brewParams: newBrewParams,
-        beakerParams: newBeakerParams,
-      });
-    }
+    // // else if (processName === 'Malt') {
+    // // }
+    // else {
+    //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //   // @ts-ignore
+    //   navigation.navigate('LiveTracker', {
+    //     brewParams: newBrewParams,
+    //     beakerParams: newBeakerParams,
+    //   });
+    // }
+    navigation.navigate('LiveTracker', {
+      brewParams: newBrewParams,
+      beakerParams: newBeakerParams,
+    });
   };
 
   const incrementPillButtonTextIndex = () => {

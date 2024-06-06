@@ -26,10 +26,10 @@ export const MASH = { action: 'mash', params: { motor: 1 } };
 export const HOPS = { action: 'hops', params: { angle: 86 } };
 // {"code":200,"msg":{"st":86}}
 
-export const LIFT_UP = { action: 'lift', params: { pos: 'up' } };
+export const LIFT_UP = { act: 'lt', prs: { pos: 'up' } };
 // {"code":200,"msg":{"st":"ongoing"}}
 
-export const LIFT_Down = { action: 'lift', params: { pos: 'down' } };
+export const LIFT_Down = { act: 'lt', prs: { pos: 'dw' } };
 // {"code":200,"msg":{"st":"idle"}}
 
 export const System_Check = { action: 'systemCheck' };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Alert } from 'react-native';
 import useUSBSerial from './USBSerial';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -29,8 +30,9 @@ const useAction = () => {
   const [brewActionCycleCompleted, setBrewActionCycleCompleted] = useState(false);
   const [actions, setActions] = useState<
     {
-      action: string;
-      params?: any;
+      act: string;
+      typ?: string;
+      prs?: any;
     }[]
   >([]);
 
@@ -51,10 +53,11 @@ const useAction = () => {
   };
 
   const updateActions = useCallback(
-    (actionName: string, params: any) => {
+    (actionName: string, params: any, type: string) => {
       const updatedAction = {
-        action: actionName,
-        params,
+        act: actionName,
+        typ: type,
+        prs: params,
       };
       const tempActions = [...actions];
       tempActions[currentActionIndex] = updatedAction;
@@ -64,10 +67,11 @@ const useAction = () => {
   );
 
   const startFillAction = useCallback(
-    async (volume = 10) => {
+    async (type: string, vol = 10) => {
       setActionStatus('filling');
-      updateActions('fill', volume);
-      const res = await handleSend('fill', { action: 'fill', params: { volume } });
+      if (type === 'strt') updateActions('fl', { vol }, 'read');
+      else updateActions('fl', { vol }, type);
+      const res = await handleSend('fl', { act: 'fl', typ: type, prs: { vol } });
       console.log('FILL HANDLESEND RESPONSE------ ', res);
       setResponseFromDeviceHandleSend(res);
     },
@@ -75,19 +79,21 @@ const useAction = () => {
   );
 
   const startTempAction = useCallback(
-    async (temp = 80, params?: any) => {
+    async (type: string, temp = 80, params?: any) => {
       setActionStatus('heating');
 
       if (params && Object.keys(params).length > 0) {
-        updateActions('temp', params);
-        const res = await handleSend('temp', { action: 'temp', params });
+        if (type === 'strt') updateActions('tp', params, 'read');
+        else updateActions('tp', params, type);
+        const res = await handleSend('tp', { act: 'tp', typ: type, prs: params });
         console.log('TEMP PARAMS HANDLESEND RESPONSE------ ', res);
         setResponseFromDeviceHandleSend(res);
       } else {
         // const defaultParams = { drum: temp, cooler: 4 };
-        const defaultParams = { drum: temp, cooler: 10 };
-        updateActions('temp', defaultParams);
-        const res = await handleSend('temp', { action: 'temp', params: defaultParams });
+        const defaultParams = { drm: temp };
+        if (type === 'strt') updateActions('tp', defaultParams, 'read');
+        else updateActions('fl', defaultParams, type);
+        const res = await handleSend('tp', { act: 'tp', typ: type, prs: defaultParams });
         console.log('TEMP SIMPLE HANDLESEND RESPONSE------ ', res);
         setResponseFromDeviceHandleSend(res);
       }
@@ -121,7 +127,7 @@ const useAction = () => {
       if (usbSerialState.connected && usbSerialState.deviceName) {
         setActions([
           {
-            action: 'motorStart',
+            act: 'motorStart',
           },
         ]);
       } else {
@@ -139,7 +145,7 @@ const useAction = () => {
       if (usbSerialState.connected && usbSerialState.deviceName) {
         setActions([
           {
-            action: 'motorStop',
+            act: 'motorStop',
           },
         ]);
       } else {
@@ -153,16 +159,16 @@ const useAction = () => {
 
   const motorStart = useCallback(async () => {
     setActionStatus('motorStart');
-    const params = { motor: 1 };
-    const res = await handleSend('mash', { action: 'mash', params });
+    const params = { mtr: 1 };
+    const res = await handleSend('mash', { act: 'mh', prs: params });
     console.log('MOTOR START HANDLESEND RESPONSE------ ', res);
     setResponseFromDeviceHandleSend(res);
   }, [handleSend]);
 
   const motorStop = useCallback(async () => {
     setActionStatus('motorStop');
-    const params = { motor: 0 };
-    const res = await handleSend('mash', { action: 'mash', params });
+    const params = { mtr: 0 };
+    const res = await handleSend('mash', { act: 'mh', prs: params });
     console.log('MOTOR STOP HANDLESEND RESPONSE------ ', res);
     setResponseFromDeviceHandleSend(res);
   }, [handleSend]);
@@ -270,10 +276,12 @@ const useAction = () => {
       if (usbSerialState.connected && usbSerialState.deviceName) {
         setActions([
           {
-            action: 'fill',
+            act: 'fl',
+            typ: 'strt',
           },
           {
-            action: 'temp',
+            act: 'tp',
+            typ: 'strt',
           },
         ]);
       } else {
@@ -288,7 +296,6 @@ const useAction = () => {
   const startMashing = async () => {
     const resRecipes = await apiClient.get('recipe');
     const brewInputs = resRecipes?.data?.recipe[0]?.brew_inputs;
-
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const temperatureInput = getValueByName(brewInputs, 'temperature', 'mash');
       // setActions([
@@ -301,17 +308,20 @@ const useAction = () => {
       //   },
       // ]);
       const params = {
-        drum: 63,
-        cooler: 4,
+        drm: 68,
       };
       setActions([
         {
-          action: 'fill',
-          params: 23,
+          act: 'fl',
+          typ: 'strt',
+          prs: {
+            vol: 23,
+          },
         },
         {
-          action: 'temp',
-          params,
+          act: 'tp',
+          typ: 'strt',
+          prs: params,
         },
       ]);
     } else {
@@ -322,7 +332,6 @@ const useAction = () => {
   const startPostMaltProcesses = async () => {
     const resRecipes = await apiClient.get('recipe');
     const brewInputs = resRecipes?.data?.recipe[0]?.brew_inputs;
-
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const temperatureInput = getValueByName(brewInputs, 'temperature', 'mash');
       setBrewActionCycleCompleted(false);
@@ -333,13 +342,13 @@ const useAction = () => {
       //   },
       // ]);
       const params = {
-        drum: 63,
-        cooler: 4,
+        drm: 63,
       };
       setActions([
         {
-          action: 'temp',
-          params,
+          act: 'tp',
+          typ: 'strt',
+          prs: params,
         },
       ]);
     } else {
@@ -350,12 +359,10 @@ const useAction = () => {
   const startBoiling = async (currentBrix = 12) => {
     const resRecipes = await apiClient.get('recipe');
     const brewInputs = resRecipes?.data?.recipe[0]?.brew_inputs;
-
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const targetBrix = getValueByName(brewInputs, 'brix', 'postmash');
       const volumetricbrixratio = getValueByName(brewInputs, 'volumebrixratio', 'volumebrixratio');
       const boilDuration = getValueByName(brewInputs, 'duration', 'boil');
-
       const boilTemperature = getValueByName(brewInputs, 'temperature', 'boil');
       const pwm = pwmGenerator(currentBrix, volumetricbrixratio, targetBrix, boilDuration);
       // const params = {
@@ -364,14 +371,13 @@ const useAction = () => {
       //   cooler: coolerTemp,
       // };
       const params = {
-        drum: 94,
-        pwm: 92,
-        cooler: 4,
+        drm: 99,
       };
       setActions([
         {
-          action: 'temp',
-          params,
+          act: 'tp',
+          typ: 'strt',
+          prs: params,
         },
       ]);
       // await startTempAction(boilTemperature, params);
@@ -384,13 +390,11 @@ const useAction = () => {
     cleanup();
     const resRecipes = await apiClient.get('recipe');
     const brewInputs = resRecipes?.data?.recipe[0]?.brew_inputs;
-
     if (brewInputs && usbSerialState.connected && usbSerialState.deviceName) {
       const volumetricbrixratio = getValueByName(brewInputs, 'volumebrixratio', 'volumebrixratio');
       const targetBrix = getValueByName(brewInputs, 'brix', 'postmash');
       const boilDuration = getValueByName(brewInputs, 'duration', 'boil');
       const pitching = getValueByName(brewInputs, 'temperature', 'fermentation');
-
       const pwm = pwmGenerator(currentBrix, volumetricbrixratio, targetBrix, boilDuration);
       // const params = {
       //   drum: pitching[0],
@@ -398,13 +402,14 @@ const useAction = () => {
       //   cooler: coolerTemp,
       // };
       const params = {
-        drum: 27,
-        cooler: 4,
+        drm: 24,
+        clr: 4,
       };
       setActions([
         {
-          action: 'temp',
-          params,
+          act: 'tp',
+          typ: 'strt',
+          prs: params,
         },
       ]);
       // await startTempAction(pitching[0], params);
@@ -462,39 +467,49 @@ const useAction = () => {
     Alert.alert('Dispense action is under construction');
   };
 
-  const runBrewAction = async (name: string, params?: any) => {
+  const runBrewAction = async (name: string, type: string, params?: any) => {
     if (params) {
-      if (name === 'fill') await startFillAction(params);
-      if (name === 'temp') {
-        if (params && Object.keys(params).length > 0) await startTempAction(0, params);
-        else await startTempAction(params);
+      if (name === 'fl') {
+        if (Object.keys(params).length > 0) {
+          const { vol } = params;
+          await startFillAction(type, vol);
+        } else await startFillAction(type, params);
+      }
+      if (name === 'tp') {
+        if (params && Object.keys(params).length > 0) await startTempAction(type, 0, params);
+        else await startTempAction(type, params);
       }
     } else {
-      if (name === 'fill') await startFillAction();
-      if (name === 'temp') await startTempAction();
+      if (name === 'fl') await startFillAction(type);
+      if (name === 'tp') await startTempAction(type);
       if (name === 'motorStart') await motorStart();
       if (name === 'motorStop') await motorStop();
     }
     return;
   };
 
-  const executeActionCallAndPercentage = async (params: any, pv: number, action: string) => {
-    let percentage;
+  const executeActionCallAndPercentage = async (params: any, pv: number, action: string, type: string) => {
+    // console.log('PARAMS', params);
+    // console.log('PV', pv);
+    let percentage = 0;
     if (typeof params === 'object') {
-      const { drum } = params;
-      percentage = calculatePercentage(drum, pv);
+      const { drm, vol } = params;
+      if (drm) percentage = calculatePercentage(drm, pv);
+      else if (vol) percentage = calculatePercentage(vol, pv);
     } else {
       percentage = calculatePercentage(params, pv);
     }
     if (percentage > 100) setPercentageCompleted(100);
     else setPercentageCompleted(percentage);
 
+    console.log('percentage', percentage);
+
     if (percentage < 100) {
       await sleep(30000);
-      await runBrewAction(action, params);
+      await runBrewAction(action, type, params);
     } else {
-      if (action === 'temp') {
-        if (typeof params === 'object') setTemperatureText(`Temperature reached ${params.drum}°C`);
+      if (action === 'tp') {
+        if (typeof params === 'object') setTemperatureText(`Temperature reached ${params.drm}°C`);
         else setTemperatureText(`Temperature reached ${params}°C`);
         await sleep(2000);
         setTemperatureText('');
@@ -506,55 +521,57 @@ const useAction = () => {
       setCurrentActionIndex((prev) => prev + 1);
 
       // IF ONLY TEMP IS THERE IN ACTION AND IT HAS ALREADY COMPLETED THEN DO A CLEANUP
-      if (action === 'temp' && actions.length === 1) cleanup();
+      if (action === 'tp' && actions.length === 1) cleanup();
     }
   };
 
   const callProcessesRecursively = useCallback(async () => {
     if (actions.length > 0) {
-      const { action, params } = actions[currentActionIndex];
+      const { act, prs, typ } = actions[currentActionIndex];
       const parsedOutput = JSON.parse(output);
 
-      if (action === 'fill') {
+      console.log('ACTION ---> ', JSON.stringify(actions[currentActionIndex]));
+
+      if (act === 'fl') {
         const {
           msg: { pv },
         } = parsedOutput;
-        executeActionCallAndPercentage(params, pv, action);
-      } else if (action === 'temp') {
+        executeActionCallAndPercentage(prs, pv, act, typ!);
+      } else if (act === 'tp') {
         const {
           msg: {
-            drum: { pv },
+            drm: { pv },
           },
         } = parsedOutput;
 
-        if (params && Object.keys(params).length > 0) {
-          executeActionCallAndPercentage(params, pv, action);
+        if (prs && Object.keys(prs).length > 0) {
+          executeActionCallAndPercentage(prs, pv, act, typ!);
         } else {
-          const { drum } = params;
-          executeActionCallAndPercentage(drum, pv, action);
+          const { drm } = prs;
+          executeActionCallAndPercentage(drm, pv, act, typ!);
         }
-      } else if (action === 'motorStart') {
+      } else if (act === 'motorStart') {
         const {
           msg: { st },
         } = parsedOutput;
 
         if (st !== 1) {
           await sleep(30000);
-          await runBrewAction(action);
+          await runBrewAction(act, '');
         } else {
           await sleep(10000);
           setActionStatus('idle');
           setResponseFromDeviceHandleSend('');
           setCurrentActionIndex((prev) => prev + 1);
         }
-      } else if (action === 'motorStop') {
+      } else if (act === 'motorStop') {
         const {
           msg: { st },
         } = parsedOutput;
 
         if (st !== 0) {
           await sleep(30000);
-          await runBrewAction(action);
+          await runBrewAction(act, '');
         } else {
           await sleep(10000);
           setActionStatus('idle');
@@ -565,22 +582,22 @@ const useAction = () => {
     }
   }, [output, actions, currentActionIndex, sleep, runBrewAction]);
 
-  console.log('CURRENT ACTION ------', actions[currentActionIndex]);
-  console.log('CURRENT ACTION INDEX -----', currentActionIndex);
-
   useEffect(() => {
+    console.log('###### OUTPUT ###### ', output);
     if (output) {
-      console.log('###### OUTPUT ###### ', output);
       callProcessesRecursively();
     }
   }, [output]);
 
   const executeActions = useCallback(async () => {
-    const { action, params } = actions[currentActionIndex];
-    await runBrewAction(action, params);
+    const { act, typ, prs } = actions[currentActionIndex];
+    if (typ) await runBrewAction(act, typ, prs);
+    else await runBrewAction(act, '', prs);
   }, [actions, currentActionIndex]);
 
   useEffect(() => {
+    console.log('CURRENT ACTION ------', actions[currentActionIndex]);
+    console.log('CURRENT ACTION INDEX -----', currentActionIndex);
     if (actions.length > 0) {
       if (currentActionIndex === actions.length) setBrewActionCycleCompleted(true);
       else executeActions();

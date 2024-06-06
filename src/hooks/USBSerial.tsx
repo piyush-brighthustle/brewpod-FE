@@ -6,8 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectUsbSerialState, setUsbSerialState } from '../slices/usbSerialStateSlice';
 
 const ActionTypes = {
-  FILL: 'fill',
-  TEMP: 'temp',
+  FILL: 'fl',
+  TEMP: 'tp',
   AIR: 'air',
   MASH: 'mash',
   HOPS: 'hops',
@@ -188,25 +188,29 @@ function useUSBSerial() {
       payloadString = RNSerialport.hexToUtf16(data.payload);
     }
 
-    // console.log('PAYLOAD STRING -----', payloadString);
+    // console.log('PAYLOAD =----> ', payloadString);
 
-    accumulatedString += payloadString;
+    const newPayloadString = payloadString.replace(/[\r\n]/g, '');
+
+    accumulatedString += newPayloadString;
     // console.log('ACCUMULATED STRING -----', accumulatedString);
     isResponseComplete = accumulatedString.endsWith('$');
+    console.log('isResponseComplete', isResponseComplete);
 
     if (isResponseComplete === true) {
-      const trimmedString = accumulatedString.slice(1, -1);
-      const parsedData = JSON.parse(trimmedString);
+      // const trimmedString = accumulatedString.slice(1, -1);
+      const trimmedString = accumulatedString.replace(/[#$]/g, '');
       // console.log('----TRIMMED DATA----', trimmedString);
-      if (parsedData?.code === 200) {
+      const parsedData = JSON.parse(trimmedString);
+      if (parsedData?.cd === 200) {
         const msg = parsedData?.msg;
 
         switch (actionSentRef?.current) {
-          case 'fill':
+          case 'fl':
             setActionFill({ st: msg?.st, pv: msg?.pv });
             dispatchToUsbSerialState('actionFill', { st: msg?.st, pv: msg?.pv });
             break;
-          case 'temp':
+          case 'tp':
             const tempValue = { drum: { md: msg?.drum?.md, pv: msg?.drum?.pv, sv: msg?.drum?.sv }, cooler: { md: msg?.drum?.md, pv: msg?.drum?.pv, sv: msg?.drum?.sv } };
             setActionTemp(tempValue);
             dispatchToUsbSerialState('actionTemp', tempValue);
@@ -257,6 +261,8 @@ function useUSBSerial() {
         payloadString = '';
       }
     }
+
+    isResponseComplete = false;
   };
 
   return {

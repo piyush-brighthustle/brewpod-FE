@@ -48,7 +48,7 @@ const BrewpodBufferScreen = () => {
     screenSubtitle: 'Your Brewpod',
     pillButton: {
       // eslint-disable-next-line quotes
-      title: ['Close the valve', 'Repeat Sequence'],
+      title: ['Close the valve', 'Proceed with Mashing'],
     },
     processName: 'Prepare',
     beakerBottomText: 'Please open the valve',
